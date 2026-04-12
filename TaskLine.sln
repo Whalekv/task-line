@@ -1,0 +1,25 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskLine", "TaskLine\TaskLine.csproj", "{8F3A1C5E-2B7D-4F9E-A6C3-1D8E5B2F7A4C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskLine.Tests", "TaskLine.Tests\TaskLine.Tests.csproj", "{3C7D2A9F-6E4B-4F1A-B8D5-2E9C7F3A5B1D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8F3A1C5E-2B7D-4F9E-A6C3-1D8E5B2F7A4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F3A1C5E-2B7D-4F9E-A6C3-1D8E5B2F7A4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F3A1C5E-2B7D-4F9E-A6C3-1D8E5B2F7A4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F3A1C5E-2B7D-4F9E-A6C3-1D8E5B2F7A4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C7D2A9F-6E4B-4F1A-B8D5-2E9C7F3A5B1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C7D2A9F-6E4B-4F1A-B8D5-2E9C7F3A5B1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C7D2A9F-6E4B-4F1A-B8D5-2E9C7F3A5B1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C7D2A9F-6E4B-4F1A-B8D5-2E9C7F3A5B1D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
