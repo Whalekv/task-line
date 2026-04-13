@@ -2,24 +2,62 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:TaskLine.ViewModels"
-        Title="TaskLine" Height="600" Width="480"
-        MinHeight="400" MinWidth="360"
+        xmlns:conv="clr-namespace:TaskLine.Converters"
+        Title="TaskLine" Height="600" Width="680"
+        MinHeight="400" MinWidth="480"
         WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
         Background="White">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40"
+                      GlassFrameThickness="0"
+                      ResizeBorderThickness="6" />
+    </WindowChrome.WindowChrome>
 
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
 
+    <Window.Resources>
+        <conv:DateDisplayConverter x:Key="DateDisplayConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
             <RowDefinition Height="56" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <!-- 自定义标题栏 -->
+        <Grid Grid.Row="0" Background="White">
+            <TextBlock Text="TaskLine"
+                       Foreground="#424242"
+                       FontSize="13"
+                       FontWeight="Medium"
+                       VerticalAlignment="Center"
+                       Margin="14,0" />
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top">
+                <Button Style="{StaticResource CaptionButton}"
+                        Content="&#xE921;"
+                        Click="OnMinimizeClick" />
+                <Button x:Name="MaximizeRestoreButton"
+                        Style="{StaticResource CaptionButton}"
+                        Content="&#xE922;"
+                        Click="OnMaximizeRestoreClick" />
+                <Button Style="{StaticResource CloseButton}"
+                        Content="&#xE8BB;"
+                        Click="OnCloseClick" />
+            </StackPanel>
+        </Grid>
+
         <!-- Header -->
-        <Border Grid.Row="0" Background="{StaticResource PrimaryBrush}">
+        <Border Grid.Row="1" Background="{StaticResource PrimaryBrush}">
             <TextBlock Text="TaskLine"
                        Foreground="White"
                        FontSize="20" FontWeight="SemiBold"
@@ -27,101 +65,306 @@
                        Margin="16,0" />
         </Border>
 
-        <!-- Add task bar -->
-        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}"
-                BorderBrush="#E0E0E0" BorderThickness="0,0,0,1"
-                Padding="12,10">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+        <!-- 主内容区：日期侧边栏 + 任务面板 -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="160" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-                <TextBox Grid.Column="0"
-                         Text="{Binding NewTaskTitle, UpdateSourceTrigger=PropertyChanged}"
-                         Padding="8,6"
-                         FontSize="14"
-                         BorderBrush="#BDBDBD"
-                         BorderThickness="1"
-                         VerticalContentAlignment="Center"
-                         Margin="0,0,8,0">
-                    <TextBox.Style>
-                        <Style TargetType="TextBox">
-                            <Style.Triggers>
-                                <Trigger Property="IsFocused" Value="True">
-                                    <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBox.Style>
-                    <TextBox.InputBindings>
-                        <KeyBinding Key="Return" Command="{Binding AddTaskCommand}" />
-                    </TextBox.InputBindings>
-                </TextBox>
+            <!-- 日期侧边栏 -->
+            <Border Grid.Column="0"
+                    BorderBrush="#E0E0E0"
+                    BorderThickness="0,0,1,0"
+                    Background="White">
+                <ListBox ItemsSource="{Binding DateList}"
+                         SelectedItem="{Binding SelectedDate, Mode=TwoWay}"
+                         ItemContainerStyle="{StaticResource DateListBoxItemStyle}"
+                         BorderThickness="0"
+                         Background="Transparent"
+                         Padding="0,6">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource DateDisplayConverter}}"
+                                       FontSize="13" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
 
-                <Button Grid.Column="1"
-                        Content="Add Task"
-                        Style="{StaticResource PrimaryButton}"
-                        Command="{Binding AddTaskCommand}"
-                        FontSize="13" />
-            </Grid>
-        </Border>
+            <!-- 任务面板 -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-        <!-- Task list -->
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Tasks}" Margin="0,4">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Margin="10,4" Padding="12,10"
-                                BorderBrush="#E0E0E0" BorderThickness="1"
-                                CornerRadius="6" Background="White">
+                <!-- 日期标题 -->
+                <Border Grid.Row="0"
+                        Padding="16,14,16,12"
+                        BorderBrush="#E0E0E0"
+                        BorderThickness="0,0,0,1">
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding SelectedDate, Converter={StaticResource DateDisplayConverter}}"
+                                       FontSize="20"
+                                       FontWeight="SemiBold"
+                                       Foreground="#212121" />
+                            <TextBlock Text="{Binding SelectedDate, StringFormat={}{0:yyyy年M月d日 dddd}}"
+                                       FontSize="12"
+                                       Foreground="#9E9E9E"
+                                       Margin="0,2,0,0" />
+                        </StackPanel>
+                        <Button Content="+ 新建任务"
+                                Style="{StaticResource PrimaryButton}"
+                                FontSize="13"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding IsAddableDate, Converter={StaticResource BoolToVis}}"
+                                Click="OnAddTaskClick" />
+                    </Grid>
+                </Border>
+
+                <!-- 控制台区域（仅今天可见） -->
+                <Border Grid.Row="1"
+                        x:Name="ConsoleZone"
+                        Margin="10,10,10,4"
+                        CornerRadius="8"
+                        Background="Transparent"
+                        AllowDrop="True"
+                        PreviewDrop="OnConsoleDrop"
+                        DragEnter="OnConsoleDragEnter"
+                        DragLeave="OnConsoleDragLeave"
+                        PreviewDragOver="OnConsoleDragOver"
+                        Visibility="{Binding IsToday, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <!-- 空态：虚线提示区域（纯装饰，不参与 hit-test 以免阻断 Drop 事件） -->
+                        <Grid x:Name="ConsoleEmptyPane"
+                              IsHitTestVisible="False"
+                              Visibility="{Binding IsConsoleEmpty, Converter={StaticResource BoolToVis}}">
+                            <!-- 顶边虚线 -->
+                            <Rectangle Height="1" VerticalAlignment="Top"
+                                       Fill="{StaticResource DashedBorderBrush}" />
+                            <!-- 底边虚线 -->
+                            <Rectangle Height="1" VerticalAlignment="Bottom"
+                                       Fill="{StaticResource DashedBorderBrush}" />
+                            <!-- 左边虚线（旋转90°复用同一画刷） -->
+                            <Rectangle Width="1" HorizontalAlignment="Left"
+                                       Fill="{StaticResource DashedBorderBrush}"
+                                       RenderTransformOrigin="0.5,0.5">
+                                <Rectangle.RenderTransform>
+                                    <RotateTransform Angle="90" />
+                                </Rectangle.RenderTransform>
+                            </Rectangle>
+                            <!-- 右边虚线 -->
+                            <Rectangle Width="1" HorizontalAlignment="Right"
+                                       Fill="{StaticResource DashedBorderBrush}"
+                                       RenderTransformOrigin="0.5,0.5">
+                                <Rectangle.RenderTransform>
+                                    <RotateTransform Angle="90" />
+                                </Rectangle.RenderTransform>
+                            </Rectangle>
+                            <!-- 提示内容 -->
+                            <StackPanel VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,16">
+                                <TextBlock Text="⚡"
+                                           FontSize="18"
+                                           HorizontalAlignment="Center"
+                                           Foreground="#BDBDBD" />
+                                <TextBlock Text="将任务拖到这里开始执行"
+                                           FontSize="12"
+                                           Foreground="#BDBDBD"
+                                           Margin="0,6,0,0" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- 占用态：激活任务卡片（整体可拖拽回列表） -->
+                        <Border x:Name="ConsoleFullPane"
+                                DataContext="{Binding ActiveTask}"
+                                Visibility="{Binding DataContext.IsConsoleFull,
+                                             RelativeSource={RelativeSource AncestorType=Grid},
+                                             Converter={StaticResource BoolToVis}}"
+                                BorderBrush="{StaticResource PrimaryBrush}"
+                                BorderThickness="3,0,0,0"
+                                CornerRadius="0,6,6,0"
+                                Background="#F0F5FF"
+                                ClipToBounds="True"
+                                PreviewMouseLeftButtonDown="OnConsoleCardMouseDown"
+                                PreviewMouseMove="OnConsoleCardMouseMove">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="6" />
+                                </Grid.RowDefinitions>
 
-                                <CheckBox Grid.Column="0"
-                                          IsChecked="{Binding IsCompleted, Mode=OneWay}"
-                                          Command="{Binding DataContext.ToggleCompleteCommand,
-                                                    RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                          CommandParameter="{Binding}"
-                                          VerticalAlignment="Center"
-                                          Margin="0,0,10,0" />
+                                <!-- 控制台标题行 -->
+                                <StackPanel Grid.Row="0"
+                                            Orientation="Horizontal"
+                                            Margin="12,8,12,4">
+                                    <Ellipse Width="7" Height="7"
+                                             Fill="{StaticResource PrimaryBrush}"
+                                             VerticalAlignment="Center"
+                                             Margin="0,0,6,0" />
+                                    <TextBlock Text="执行中"
+                                               FontSize="11"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource PrimaryBrush}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
 
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding Title}"
-                                           FontSize="14"
-                                           VerticalAlignment="Center"
-                                           TextWrapping="Wrap">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsCompleted}" Value="True">
-                                                    <Setter Property="TextDecorations" Value="Strikethrough" />
-                                                    <Setter Property="Foreground" Value="{StaticResource CompletedTextBrush}" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <!-- 卡片主体 -->
+                                <Grid Grid.Row="1" Margin="12,0,12,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-                                <Button Grid.Column="2"
-                                        Content="✕"
-                                        Style="{StaticResource DangerButton}"
-                                        Padding="8,4"
-                                        FontSize="12"
-                                        Command="{Binding DataContext.DeleteTaskCommand,
-                                                  RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                        CommandParameter="{Binding}"
-                                        VerticalAlignment="Center"
-                                        Margin="8,0,0,0" />
+                                    <CheckBox Grid.Column="0"
+                                              IsChecked="{Binding IsCompleted, Mode=OneWay}"
+                                              Command="{Binding DataContext.ToggleCompleteCommand,
+                                                        RelativeSource={RelativeSource AncestorType=Window}}"
+                                              CommandParameter="{Binding}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,10,0" />
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontSize="14"
+                                                   TextWrapping="Wrap">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                            <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                            <Setter Property="Foreground" Value="{StaticResource CompletedTextBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding CreatedAt, Converter={StaticResource DateDisplayConverter}, StringFormat=创建于 {0}}"
+                                                   FontSize="11"
+                                                   Foreground="#BDBDBD"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+
+                                    <Button Grid.Column="2"
+                                            Content="✕"
+                                            Style="{StaticResource DangerButton}"
+                                            Padding="8,4"
+                                            FontSize="12"
+                                            Command="{Binding DataContext.ClearActiveTaskCommand,
+                                                      RelativeSource={RelativeSource AncestorType=Window}}"
+                                            VerticalAlignment="Center"
+                                            Margin="8,0,0,0" />
+                                </Grid>
+
+                                <!-- 进度条 -->
+                                <ProgressBar Grid.Row="2"
+                                             Value="{Binding Progress}"
+                                             Maximum="100"
+                                             Style="{StaticResource ProgressStripStyle}"
+                                             MouseLeftButtonDown="OnStripMouseDown"
+                                             MouseMove="OnStripMouseMove"
+                                             MouseLeftButtonUp="OnStripMouseUp" />
                             </Grid>
                         </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- 任务列表 -->
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                              AllowDrop="True"
+                              Drop="OnListDrop"
+                              DragEnter="OnListDragEnter"
+                              DragLeave="OnListDragLeave"
+                              DragOver="OnListDragOver">
+                    <ItemsControl ItemsSource="{Binding TasksForSelectedDate}" Margin="0,4">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="10,4"
+                                        BorderBrush="#E0E0E0" BorderThickness="1"
+                                        CornerRadius="6"
+                                        ClipToBounds="True"
+                                        PreviewMouseLeftButtonDown="OnCardMouseDown"
+                                        PreviewMouseMove="OnCardMouseMove">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="6" />
+                                        </Grid.RowDefinitions>
+
+                                        <!-- 内容层 -->
+                                        <Border Grid.Row="0" Padding="12,10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <CheckBox Grid.Column="0"
+                                                          IsChecked="{Binding IsCompleted, Mode=OneWay}"
+                                                          Command="{Binding DataContext.ToggleCompleteCommand,
+                                                                    RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                          CommandParameter="{Binding}"
+                                                          VerticalAlignment="Center"
+                                                          Margin="0,0,10,0" />
+
+                                                <StackPanel Grid.Column="1"
+                                                            VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Title}"
+                                                               FontSize="14"
+                                                               TextWrapping="Wrap">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                        <Setter Property="Foreground" Value="{StaticResource CompletedTextBrush}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <TextBlock Text="{Binding CreatedAt, Converter={StaticResource DateDisplayConverter}, StringFormat=创建于 {0}}"
+                                                               FontSize="11"
+                                                               Foreground="#BDBDBD"
+                                                               Margin="0,2,0,0" />
+                                                </StackPanel>
+
+                                                <Button Grid.Column="2"
+                                                        Content="✕"
+                                                        Style="{StaticResource DangerButton}"
+                                                        Padding="8,4"
+                                                        FontSize="12"
+                                                        Command="{Binding DataContext.DeleteTaskCommand,
+                                                                  RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        VerticalAlignment="Center"
+                                                        Margin="8,0,0,0" />
+                                            </Grid>
+                                        </Border>
+
+                                        <!-- 底部进度拖拽条 -->
+                                        <ProgressBar Grid.Row="1"
+                                                     Value="{Binding Progress}"
+                                                     Maximum="100"
+                                                     Style="{StaticResource ProgressStripStyle}"
+                                                     MouseLeftButtonDown="OnStripMouseDown"
+                                                     MouseMove="OnStripMouseMove"
+                                                     MouseLeftButtonUp="OnStripMouseUp" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>
